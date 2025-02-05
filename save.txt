@@ -1,0 +1,208 @@
+#python -u "c:\Users\hp\Desktop\script\jasn_algo\code2.py" "C:\Users\hp\Desktop\script\jasn_algo\cvat_sample.json" "C:\Users\hp\Desktop\script\jasn_algo\data.csv" 5
+import sys
+import json
+import math
+import csv
+import statistics
+from datetime import datetime
+
+def read_json_file(file_path):
+    try:
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+            print("File found.")
+            return data
+    except FileNotFoundError:
+        print("File not found.")
+        return None
+    except json.JSONDecodeError:
+        print("Invalid JSON format.")
+        return None
+
+def calculate_duration(json_data):
+    results = json_data.get("results", {})
+    for key, value in results.items():
+        frames = value.get("frames", [])
+        for frame in frames:
+            fields = frame.get("schema", {}).get("fields", [])
+            duration_index = None
+            for index, field in enumerate(fields):
+                if field["name"] == "duration":
+                    duration_index = index
+                    break
+
+            if duration_index is not None:
+                data_values = frame.get("data", {}).get("values", [])
+                duration_values = data_values[duration_index]
+                
+                mean_duration = statistics.mean(duration_values)
+                stdev_duration = statistics.stdev(duration_values)
+                max_duration = max(duration_values)
+                min_duration = min(duration_values)
+
+                duration_sum = sum(duration_values)
+                duration_min = duration_sum / 1000 / 60
+                duration_hour = duration_min / 60
+                
+                print("Mean of duration values in sec:", "{:.4f}".format(mean_duration/1000))
+                print("Standard deviation of duration values in sec:", "{:.4f}".format(stdev_duration/1000))
+                print("Max duration value in sec:", max_duration/1000)
+                print("Min duration value in sec:", min_duration/1000)
+                floor_duration_hour = math.floor(duration_hour)
+                real_duration_min = duration_min - (floor_duration_hour * 60)
+                print(f"Time in hours and min is: {floor_duration_hour} : {real_duration_min:.4f}")
+            else:
+                print("Duration field not found.")
+
+def count_distinct_task_id_values(json_data):
+    results = json_data.get("results", {})
+    for key, value in results.items():
+        frames = value.get("frames", [])
+        for frame in frames:
+            fields = frame.get("schema", {}).get("fields", [])
+            task_id_index = None
+            for index, field in enumerate(fields):
+                if field["name"] == "task_id":
+                    task_id_index = index
+                    break
+
+            if task_id_index is not None:
+                data_values = frame.get("data", {}).get("values", [])
+                distinct_task_ids = set(data_values[task_id_index])
+                distinct_task_id_count = len(distinct_task_ids)
+                print("Count of distinct task_id values:", distinct_task_id_count)
+            else:
+                print("task_id field not found.")
+
+def calculate_sum_of_large_frames_inProjecrID(json_data, threshold):
+    results = json_data.get("results", {})
+    for key, value in results.items():
+        frames = value.get("frames", [])
+        for frame in frames:
+            fields = frame.get("schema", {}).get("fields", [])
+            payload_index = None
+            for index, field in enumerate(fields):
+                if field["name"] == "payload":
+                    payload_index = index
+                    break
+
+            if payload_index is not None:
+                data_values = frame.get("data", {}).get("values", [])
+                payload_values = data_values[payload_index]
+                frame_count = {}
+                for payload in payload_values:
+                    try:
+                        payload_dict = json.loads(payload)
+                        frame_num = payload_dict.get("frame")
+                        if frame_num is not None:
+                            frame_count[frame_num] = frame_count.get(frame_num, 0) + 1
+                    except json.JSONDecodeError:
+                        print("Error decoding payload:", payload)
+                total_sum = sum(1 for count in frame_count.values() if count >= threshold)
+                print("Sum of repetition counts for frame values in payload:", total_sum)
+            else:
+                print("Payload field not found.")
+
+def get_project_names_from_csv(json_data, csv_path):
+    results = json_data.get("results", {})
+    for key, value in results.items():
+        frames = value.get("frames", [])
+        for frame in frames:
+            fields = frame.get("schema", {}).get("fields", [])
+            project_id_index = None
+            for index, field in enumerate(fields):
+                if field["name"] == "project_id":
+                    project_id_index = index
+                    break
+            
+            if project_id_index is not None:
+                data_values = frame.get("data", {}).get("values", [])
+                project_id_values = data_values[project_id_index]
+                distinct_project_ids = set(str(project_id) for project_id in project_id_values)  # Convert to strings
+                with open(csv_path, 'r') as csv_file:
+                    csv_reader = csv.reader(csv_file)
+                    id_name_dict = {}
+                    for row in csv_reader:
+                        id_name_dict[row[0]] = row[1]
+                    
+                    print("Project Names:")
+                    for project_id in distinct_project_ids:
+                        if project_id in id_name_dict:
+                            print(f"{project_id}: {id_name_dict[project_id]}")
+                        else:
+                            print(f"No name found for project ID: {project_id}")
+              
+            else:
+                print("project_id field not found.")
+
+def print_start_and_end_dates(json_data):
+    results = json_data.get("results", {})
+    for key, value in results.items():
+        frames = value.get("frames", [])
+        for frame in frames:
+            fields = frame.get("schema", {}).get("fields", [])
+            timestamp_index = None
+            for index, field in enumerate(fields):
+                if field["name"] == "timestamp":
+                    timestamp_index = index
+                    break
+
+            if timestamp_index is not None:
+                data_values = frame.get("data", {}).get("values", [])
+                timestamp_values = data_values[timestamp_index]
+                start_timestamp = min(timestamp_values)
+                end_timestamp = max(timestamp_values)
+                
+                start_date = datetime.fromtimestamp(start_timestamp / 1000)
+                end_date = datetime.fromtimestamp(end_timestamp / 1000)
+                
+                start_time = start_date.strftime("%H:%M")
+                end_time = end_date.strftime("%H:%M")
+                
+                print("Start time:", start_time)
+                print("End time:", end_time)
+            else:
+                print("Timestamp field not found.")
+
+def print_unique_usernames(json_data):
+    unique_usernames = set()  # To store unique usernames
+    
+    results = json_data.get("results", {})
+    for key, value in results.items():
+        frames = value.get("frames", [])
+        for frame in frames:
+            fields = frame.get("schema", {}).get("fields", [])
+            username_index = None
+            for index, field in enumerate(fields):
+                if field["name"] == "user_name":
+                    username_index = index
+                    break
+
+            if username_index is not None:
+                data_values = frame.get("data", {}).get("values", [])
+                username_values = data_values[username_index]
+                
+                for username in username_values:
+                    unique_usernames.add(username)
+    
+    
+    for username in unique_usernames:
+        print("Username is :",username)
+
+if __name__ == "__main__":
+    if len(sys.argv) != 4:
+        print("Usage: python script.py <path_to_json_file> <path_to_csv_file> <threshold>")
+        sys.exit(1)
+    
+    json_file_path = sys.argv[1]
+    csv_file_path = sys.argv[2]
+    threshold = int(sys.argv[3])
+    
+    json_data = read_json_file(json_file_path)
+    if json_data:
+        calculate_duration(json_data)
+        count_distinct_task_id_values(json_data)
+        calculate_sum_of_large_frames_inProjecrID(json_data, threshold)
+        get_project_names_from_csv(json_data, csv_file_path)
+        print_start_and_end_dates(json_data)
+        print_unique_usernames(json_data)

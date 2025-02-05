@@ -1,0 +1,33 @@
+CREATE TABLE data_summary (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    mean_duration_sec FLOAT,
+    std_dev_duration_sec FLOAT,
+    max_duration_sec FLOAT,
+    min_duration_sec FLOAT,
+    duration_hours INT,
+    duration_minutes FLOAT,
+    distinct_task_id_count INT,
+    repetition_counts_sum INT,
+    project_id VARCHAR(255),
+    project_name VARCHAR(255),
+    start_time TIME,
+    end_time TIME,
+    username VARCHAR(255),
+    start_hour FLOAT,
+    start_minute FLOAT,
+    end_hour FLOAT,
+    end_minute FLOAT,
+    start_date DATE,
+    end_date DATE,
+    UNIQUE KEY (start_time, username)
+);
+
+----------------------------------------------------------
+
+INSERT INTO data_summary (mean_duration_sec, std_dev_duration_sec, max_duration_sec, min_duration_sec, duration_hours, duration_minutes, distinct_task_id_count, repetition_counts_sum, project_id, project_name, start_time, end_time, username, start_hour, start_minute, end_hour, end_minute, start_date, end_date)
+VALUES 
+(23.9127, 11.6402, 127.593, 0.094, 5, 23.6179, 1, 49, '8', 'ee', '08:02:35', '15:40:17', 'Masry', 8, 2, 15, 40, '2024-03-02', '2024-03-03'),
+(23.9127, 11.6402, 127.593, 0.094, 5, 23.6179, 1, 49, '8', 'ee', '08:02:35', '15:40:17', 'Masrygdged', 8, 2, 15, 40, '2024-03-02', '2024-03-03'),
+(23.9127, 11.6402, 127.593, 0.094, 5, 23.6179, 1, 49, '8', 'ee', '08:02:35', '15:40:17', 'AnotherUser', 8, 2, 15, 40, '2024-03-02', '2024-03-03'),
+(23.9127, 11.6402, 127.593, 0.094, 5, 23.6179, 1, 49, '8', 'ee', '08:02:35', '15:40:17', 'YetAnotherUser', 8, 2, 15, 40, '2024-03-02', '2024-03-03'),
+(23.9127, 11.6402, 127.593, 0.094, 5, 23.6179, 1, 49, '8', 'ee', '08:02:35', '15:40:17', 'LastUser', 8, 2, 15, 40, '2024-03-02', '2024-03-03');
